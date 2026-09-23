@@ -15,7 +15,11 @@ style:
   ForbiddenComment:
     active: false        # TODOs in KDoc are used as design notes, not untracked work
 
-# TODO: module-specific rule overrides go here (e.g. kiit-rpc disables MagicNumber because HTTP
-# status codes are named constants, and raises TooManyFunctions' threshold for one cohesive
-# Ktor-backed client class). Don't copy those overrides blindly — only add one once this module
-# actually hits the same shape of false positive.
+complexity:
+  LongParameterList:
+    # Request.clone() takes one named, defaulted parameter per Request field, by design
+    # (see request-review.md): a caller only names what it's actually changing, e.g.
+    # request.clone(meta = newMeta), matching Kotlin's own copy() idiom. That's the point of
+    # the wide parameter list, not something to refactor away. The companion factories
+    # (api/cli/path) are correspondingly wide too, one parameter per thing they build.
+    functionThreshold: 17
