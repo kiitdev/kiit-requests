@@ -1,0 +1,25 @@
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+style:
+  MaxLineLength:
+    maxLineLength: 120
+  WildcardImport:
+    active: true
+  ReturnCount:
+    max: 6               # guard-clause early returns are idiomatic; default of 2 is too strict
+  ForbiddenComment:
+    active: false        # TODOs in KDoc are used as design notes, not untracked work
+
+complexity:
+  LongParameterList:
+    # Request.clone() takes one named, defaulted parameter per Request field, by design
+    # (see request-review.md): a caller only names what it's actually changing, e.g.
+    # request.clone(meta = newMeta), matching Kotlin's own copy() idiom. That's the point of
+    # the wide parameter list, not something to refactor away. The companion factories
+    # (api/cli/path) are correspondingly wide too, one parameter per thing they build.
+    functionThreshold: 17
