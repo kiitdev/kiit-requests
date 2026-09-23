@@ -1,0 +1,21 @@
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+style:
+  MaxLineLength:
+    maxLineLength: 120
+  WildcardImport:
+    active: true
+  ReturnCount:
+    max: 6               # guard-clause early returns are idiomatic; default of 2 is too strict
+  ForbiddenComment:
+    active: false        # TODOs in KDoc are used as design notes, not untracked work
+
+# TODO: module-specific rule overrides go here (e.g. kiit-rpc disables MagicNumber because HTTP
+# status codes are named constants, and raises TooManyFunctions' threshold for one cohesive
+# Ktor-backed client class). Don't copy those overrides blindly — only add one once this module
+# actually hits the same shape of false positive.
