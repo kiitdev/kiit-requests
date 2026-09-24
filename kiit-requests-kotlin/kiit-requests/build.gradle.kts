@@ -48,6 +48,11 @@ kotlin {
             // until kiit-inputs is actually published, at which point this becomes a normal
             // Maven Central dependency with no other change needed.
             api("dev.kiit:kiit-inputs:0.0.0")
+
+            // Source/Identity/About moved here from being defined locally, Request exposes
+            // Source and callerId: Identity directly. Same local-checkout situation as
+            // kiit-inputs above.
+            api("dev.kiit:kiit-context:0.0.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
