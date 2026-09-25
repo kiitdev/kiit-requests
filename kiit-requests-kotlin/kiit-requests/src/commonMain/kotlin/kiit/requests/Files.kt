@@ -1,5 +1,7 @@
 package kiit.requests
 
+import kiit.call.ContentFile
+
 /**
  * Access to files attached to a request, e.g. multipart uploads on the server side or
  * attachments staged for an outbound call on the client side. Always present and non-null on a

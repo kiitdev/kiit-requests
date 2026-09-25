@@ -33,10 +33,10 @@ includeBuild("../../kiit-inputs/kiit-inputs-kotlin") {
     }
 }
 
-// Same situation for kiit-context: not published yet either, built from the local checkout.
-includeBuild("../../kiit-context/kiit-context-kotlin") {
+// Same situation for kiit-call: not published yet either, built from the local checkout.
+includeBuild("../../kiit-call/kiit-call-kotlin") {
     dependencySubstitution {
-        substitute(module("dev.kiit:kiit-context")).using(project(":kiit-context"))
+        substitute(module("dev.kiit:kiit-call")).using(project(":kiit-call"))
     }
 }
 

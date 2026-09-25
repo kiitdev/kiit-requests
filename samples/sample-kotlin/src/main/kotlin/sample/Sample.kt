@@ -1,8 +1,8 @@
 package sample
 
-import kiit.context.Identity
+import kiit.call.Identity
+import kiit.call.Verb
 import kiit.requests.CommonRequest
-import kiit.requests.Verb
 
 // The caller identity every request in this sample is attributed to. A real host would build
 // this once at startup (Identity.api/cli/job/...) and reuse it across every request/job it

@@ -1,7 +1,9 @@
 package kiit.requests
 
-import kiit.context.Identity
-import kiit.context.Source
+import kiit.call.Identity
+import kiit.call.Source
+import kiit.call.Verb
+import kiit.call.Version
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

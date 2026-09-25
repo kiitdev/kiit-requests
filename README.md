@@ -26,9 +26,9 @@ Part of [Kiit](https://www.kiit.dev)
 An HTTP request, a CLI invocation, and a queue message all carry the same underlying shape: a route, a verb, some input data, and a bit of metadata about the caller. Most code ends up modeling each one separately, so a handler written for HTTP can't be reused for CLI without a rewrite, and testing means standing up a real HTTP server just to exercise routing logic. kiit-requests is that one shape, so business logic can be written once against `Request` and wired up to whichever transport actually calls it.
 
 ```kotlin
-import kiit.context.Identity
+import kiit.call.Identity
+import kiit.call.Verb
 import kiit.requests.CommonRequest
-import kiit.requests.Verb
 
 val caller = Identity.api(company = "acme", area = "web", service = "gateway")
 val request = CommonRequest.api(
@@ -56,15 +56,15 @@ dependencies {
 }
 ```
 
-`kiit-requests` depends on `dev.kiit:kiit-inputs` and `dev.kiit:kiit-context` transitively, you
+`kiit-requests` depends on `dev.kiit:kiit-inputs` and `dev.kiit:kiit-call` transitively, you
 don't need to add either separately.
 
 **Build a request and read typed values from it:**
 
 ```kotlin
-import kiit.context.Identity
+import kiit.call.Identity
+import kiit.call.Verb
 import kiit.requests.CommonRequest
-import kiit.requests.Verb
 
 val caller = Identity.job(company = "acme", area = "jobs", service = "scheduler")
 val request = CommonRequest.cli(
@@ -97,15 +97,15 @@ See [`samples/sample-kotlin`](./samples/sample-kotlin) for a runnable end-to-end
 |---|---|
 | **`Request`** | The protocol-neutral interface: `path`/`parts`, `source`, `verb`, `data`/`args`/`params` (all `Inputs`), `meta`, `files`, `trace`, and more. |
 | **`CommonRequest`** | The default `Request` implementation, with `api`/`cli`/`path` factory functions. |
-| **`Source`** (from kiit-context) | The protocol a request arrived on: `API`, `CLI`, `Web`, `Queue`, `Bot`, and others, or `Other(name)` for anything not built in. |
-| **`Identity` / `callerId`** (from kiit-context) | `callerId: Identity` identifies the calling service/component, mobile, web, CLI, service-to-service. Strictly required, a `Request` can't be constructed without one. |
-| **`Verb`** | A protocol-neutral CRUD-ish verb (`Create`, `Get`, `Query`, `Update`, `Patch`, `Delete`, `Execute`), deliberately not HTTP-shaped. |
+| **`Source`** (from kiit-call) | The protocol a request arrived on: `API`, `CLI`, `Web`, `Queue`, `Bot`, and others, or `Other(name)` for anything not built in. |
+| **`Identity` / `callerId`** (from kiit-call) | `callerId: Identity` identifies the calling service/component, mobile, web, CLI, service-to-service. Strictly required, a `Request` can't be constructed without one. |
+| **`Verb`** (from kiit-call) | A protocol-neutral CRUD-ish verb (`Create`, `Get`, `Query`, `Update`, `Patch`, `Delete`, `Execute`), deliberately not HTTP-shaped. |
 | **`data` / `args` / `params`** | Three separate `Inputs` (from kiit-inputs): body arguments, query-string arguments, and path-declared parameters. `Request` keeps them apart rather than merging them into one flat map; that merge is a dispatcher concern. |
 | **`meta`** | Header-like settings for the request (HTTP headers, CLI flags, queue attributes), as a `Meta`. Keys that legitimately repeat (e.g. `Set-Cookie`) are readable via `getAll(key)`. |
-| **`Version`** | A request's API-level version, plus an optional action-level override. |
-| **`Trace`** | Distributed tracing context (W3C Trace Context shape), carried through faithfully but never created or managed by kiit-requests itself. |
+| **`Version`** (from kiit-call) | A request's API-level version, plus an optional action-level override. |
+| **`Trace`** (from kiit-call) | Distributed tracing context (W3C Trace Context shape), carried through faithfully but never created or managed by kiit-requests itself. |
 | **`Files`** | Lazy access to files attached to a request, e.g. a multipart upload. `Files.None` covers hosts with no file concept. |
-| **`Content` / `ContentFile`** | Typed byte content with a `ContentType` attached, for responses or file-like values that need to carry their format along with them. |
+| **`Content` / `ContentFile`** (from kiit-call) | Typed byte content with a `ContentType` attached, for responses or file-like values that need to carry their format along with them. |
 
 `clone()` rewrites a request without mutating it: every field defaults to `this.<field>`, matching Kotlin's own `copy()` idiom. `structured()` destructures a request into key/value pairs for structured logging, the same fields every host produces regardless of which protocol it's adapting.
 
@@ -124,7 +124,7 @@ See [`samples/sample-kotlin`](./samples/sample-kotlin) for a runnable end-to-end
 
 - Kotlin Multiplatform
 - JVM, Android, iOS (arm64, simulator arm64, x64)
-- Depends on `dev.kiit:kiit-inputs` and `dev.kiit:kiit-context` (both transitively available to consumers via `api`)
+- Depends on `dev.kiit:kiit-inputs` and `dev.kiit:kiit-call` (both transitively available to consumers via `api`)
 
 ## License
 
