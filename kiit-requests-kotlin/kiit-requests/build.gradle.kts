@@ -53,6 +53,11 @@ kotlin {
             // locally, Request exposes all of these directly. Same local-checkout situation as
             // kiit-inputs above.
             api("dev.kiit:kiit-call:0.0.0")
+
+            // Response exposes Status/Err directly. Both are already published to Maven Central,
+            // same versions kiit-rpc depends on - no composite build needed for these two.
+            api("dev.kiit:kiit-codes:1.1.0")
+            api("dev.kiit:kiit-result:1.0.2")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

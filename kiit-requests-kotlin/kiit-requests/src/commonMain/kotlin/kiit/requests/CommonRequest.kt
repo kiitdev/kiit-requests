@@ -25,7 +25,7 @@ import kotlin.uuid.Uuid
  */
 private class RequestMeta(private val fields: Map<String, Any?>) :
     Meta, Inputs by RecordMap(ListMap(fields.toList())) {
-    override fun toMap(): Map<String, Any> = fields.filterValues { it != null }.mapValues { it.value as Any }
+    override fun toMap(): Map<String, String> = fields.filterValues { it != null }.mapValues { it.value.toString() }
 
     override fun getAll(key: String): List<String> = fields[key]?.let { listOf(it.toString()) } ?: emptyList()
 }
