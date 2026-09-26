@@ -8,6 +8,7 @@ import kiit.inputs.ArgsMap
 import kiit.inputs.Inputs
 import kiit.inputs.ListMap
 import kiit.inputs.Meta
+import kiit.inputs.MetaMap
 import kiit.inputs.RecordMap
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -16,22 +17,12 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * A [Meta], delegating the read side to a [RecordMap] and adding [toMap]/[getAll] on top.
- * Backed by a plain, single-value-per-key `Map`, so [getAll] only ever returns zero or one
- * value; a caller that needs true multi-value meta (repeated headers) should build a
- * `kiit.inputs.MetaMap` directly instead of going through [CommonServerRequest]'s factories.
+ * Kiit's own real, ready-to-use [ServerRequest]: combines it with [KiitRouting], the
+ * `area`/`api`/`action` convention kiit-cli/kiit-tasks/kiit-apis dispatch on. Anything that
+ * needs that convention takes/builds a `KiitRequest`, not a plain `ServerRequest`, so the
+ * convention stays opt-in at the type level rather than assumed on every server request.
  */
-private class RequestMeta(private val fields: Map<String, Any?>) :
-    Meta, Inputs by RecordMap(ListMap(fields.toList())) {
-    override fun toMap(): Map<String, String> = fields.filterValues { it != null }.mapValues { it.value.toString() }
-
-    override fun getAll(key: String): List<String> = fields[key]?.let { listOf(it.toString()) } ?: emptyList()
-}
-
-/**
- * Default implementation of [ServerRequest].
- */
-data class CommonServerRequest(
+data class KiitRequest(
     override val path: String,
     override val parts: List<String>,
     override val source: Source,
@@ -49,10 +40,18 @@ data class CommonServerRequest(
     override val files: Files = Files.None,
     override val trace: Trace? = null,
     override val timestamp: Instant = Clock.System.now(),
-) : ServerRequest {
+) : ServerRequest, KiitRouting {
+    override fun structured(): List<Pair<String, Any?>> {
+        return super.structured() +
+            listOf(
+                KiitRouting::area.name to area,
+                KiitRouting::api.name to api,
+                KiitRouting::action.name to action,
+            )
+    }
+
     override fun clone(
         path: String,
-        parts: List<String>,
         source: Source,
         verb: Verb,
         data: Inputs,
@@ -68,10 +67,9 @@ data class CommonServerRequest(
         files: Files,
         trace: Trace?,
         timestamp: Instant,
-    ): ServerRequest {
+    ): KiitRequest {
         return this.copy(
             path = path,
-            parts = parts,
             source = source,
             verb = verb,
             data = data,
@@ -93,7 +91,7 @@ data class CommonServerRequest(
     companion object {
         private fun inputs(map: Map<String, Any>): Inputs = RecordMap(ListMap(map.toList()))
 
-        private fun metadata(map: Map<String, Any>): Meta = RequestMeta(map)
+        private fun metadata(map: Map<String, String>): Meta = MetaMap(ListMap(map.toList()))
 
         /**
          * Builds an API/HTTP-style request. `data` is the body/payload map; `meta` is
@@ -103,18 +101,18 @@ data class CommonServerRequest(
         @JvmStatic
         fun api(
             area: String,
-            name: String,
+            api: String,
             action: String,
             verb: Verb,
             callerId: Identity,
-            meta: Map<String, Any> = mapOf(),
+            meta: Map<String, String> = mapOf(),
             data: Map<String, Any> = mapOf(),
             raw: Any? = null,
-        ): ServerRequest {
-            val path = if (area.isEmpty()) "$name.$action" else "$area.$name.$action"
-            return CommonServerRequest(
+        ): KiitRequest {
+            val path = if (area.isEmpty()) "$api.$action" else "$area.$api.$action"
+            return KiitRequest(
                 path = path,
-                parts = listOf(area, name, action),
+                parts = listOf(area, api, action),
                 source = Source.Api,
                 verb = verb,
                 data = inputs(data),
@@ -130,19 +128,19 @@ data class CommonServerRequest(
         @JvmStatic
         fun cli(
             area: String,
-            name: String,
+            api: String,
             action: String,
             verb: Verb,
             callerId: Identity,
-            meta: Map<String, Any> = mapOf(),
+            meta: Map<String, String> = mapOf(),
             data: Map<String, Any> = mapOf(),
             raw: Any? = null,
             version: Version = Version(api = "0"),
-        ): ServerRequest {
-            val path = if (area.isEmpty()) "$name.$action" else "$area.$name.$action"
-            return CommonServerRequest(
+        ): KiitRequest {
+            val path = if (area.isEmpty()) "$api.$action" else "$area.$api.$action"
+            return KiitRequest(
                 path = path,
-                parts = listOf(area, name, action),
+                parts = listOf(area, api, action),
                 source = Source.Cli,
                 verb = verb,
                 data = inputs(data),
@@ -161,15 +159,15 @@ data class CommonServerRequest(
             path: String,
             verb: Verb,
             callerId: Identity,
-            meta: Map<String, Any> = mapOf(),
+            meta: Map<String, String> = mapOf(),
             data: Map<String, Any> = mapOf(),
             raw: Any? = null,
             version: Version = Version(api = "0"),
-        ): ServerRequest {
+        ): KiitRequest {
             val parts = path.split(".")
             return cli(
                 area = parts.getOrElse(0) { "" },
-                name = parts.getOrElse(1) { "" },
+                api = parts.getOrElse(1) { "" },
                 action = parts.getOrElse(2) { "" },
                 verb = verb,
                 callerId = callerId,

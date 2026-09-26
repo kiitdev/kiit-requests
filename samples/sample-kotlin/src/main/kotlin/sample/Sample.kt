@@ -1,7 +1,7 @@
 package sample
 
 import kiit.call.Identity
-import kiit.requests.CommonServerRequest
+import kiit.requests.KiitRequest
 import kiit.requests.Tag
 import kiit.requests.Verb
 
@@ -11,13 +11,13 @@ import kiit.requests.Verb
 private val caller = Identity.api(company = "acme", area = "web", service = "gateway")
 
 /**
- * Builds an API-style request the same way a Ktor/HTTP adapter would: area/name/action, a verb,
+ * Builds an API-style request the same way a Ktor/HTTP adapter would: area/api/action, a verb,
  * and body data.
  */
 fun apiRequestExample() {
-    val request = CommonServerRequest.api(
+    val request = KiitRequest.api(
         area = "app",
-        name = "users",
+        api = "users",
         action = "create",
         verb = Verb.Create,
         callerId = caller,
@@ -37,7 +37,7 @@ fun apiRequestExample() {
  * middleware that need to transform a request without mutating it or rebuilding it from scratch.
  */
 fun cloneExample() {
-    val original = CommonServerRequest.cli("app", "jobs", "run", Verb.Execute, caller)
+    val original = KiitRequest.cli("app", "jobs", "run", Verb.Execute, caller)
     val retried = original.clone(tags = original.tags + Tag.Basic("retry"))
 
     println("original tags=${original.tags}, retried tags=${retried.tags}")
@@ -46,7 +46,7 @@ fun cloneExample() {
 
 /** `structured()` gives every host consistent structured-logging fields for free. */
 fun structuredLoggingExample() {
-    val request = CommonServerRequest.path("app.orders.cancel", Verb.Delete, caller)
+    val request = KiitRequest.path("app.orders.cancel", Verb.Delete, caller)
     request.structured().forEach { (key, value) -> println("$key=$value") }
 }
 

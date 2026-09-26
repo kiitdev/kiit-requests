@@ -6,13 +6,13 @@ import kotlin.test.assertEquals
 
 private val caller = Identity.test("kiit", "tests")
 
-class CommonServerRequestTest {
+class KiitRequestTest {
     @Test
     fun apiFactoryBuildsDataAndMetaFromMaps() {
         val request =
-            CommonServerRequest.api(
+            KiitRequest.api(
                 area = "app",
-                name = "users",
+                api = "users",
                 action = "create",
                 verb = Verb.Create,
                 callerId = caller,
@@ -30,27 +30,27 @@ class CommonServerRequestTest {
 
     @Test
     fun apiFactoryEmptyAreaOmitsLeadingDot() {
-        val request = CommonServerRequest.api("", "users", "create", Verb.Create, caller)
+        val request = KiitRequest.api("", "users", "create", Verb.Create, caller)
         assertEquals("users.create", request.path)
     }
 
     @Test
     fun cliFactoryUsesCliSourceAndDefaultVersion() {
-        val request = CommonServerRequest.cli("app", "users", "create", Verb.Create, caller)
+        val request = KiitRequest.cli("app", "users", "create", Verb.Create, caller)
         assertEquals(Source.Cli, request.source)
         assertEquals(Version(api = "0"), request.version)
     }
 
     @Test
     fun pathFactorySplitsDotDelimitedPath() {
-        val request = CommonServerRequest.path("app.users.create", Verb.Create, caller)
+        val request = KiitRequest.path("app.users.create", Verb.Create, caller)
         assertEquals(listOf("app", "users", "create"), request.parts)
         assertEquals(Source.Cli, request.source)
     }
 
     @Test
     fun argsAndParamsStartEmptyFromTheseFactories() {
-        val request = CommonServerRequest.api("app", "users", "create", Verb.Create, caller)
+        val request = KiitRequest.api("app", "users", "create", Verb.Create, caller)
         assertEquals(0, request.args.size())
         assertEquals(0, request.params.size())
     }

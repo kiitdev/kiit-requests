@@ -10,10 +10,9 @@ import kotlinx.datetime.Instant
  * The inbound side of [Request]: a call being dispatched, used for HTTP, CLI, queue-based, and
  * (planned) MCP-based calls.
  *
- * A `ServerRequest` is only ever constructed for a route that has resolved to a full
- * `area`/`name`/`action`. If resolution fails, no `ServerRequest` is built. That's a
- * construction-time contract every host (Ktor, CLI, queue, ...) has to uphold; it isn't enforced
- * by the type itself.
+ * Protocol-neutral, no routing convention baked in: [path] is just whatever raw path/route
+ * string the call targeted. Kiit's own `area`/`api`/`action` three-part convention is opt-in,
+ * see [KiitRouting]/[KiitRequest].
  *
  * `data`, `args`, and `params` are three separate, symmetric [Inputs], each scoped to exactly
  * one source: `data` is body arguments, `args` is query-string arguments, `params` is
@@ -23,7 +22,6 @@ import kotlinx.datetime.Instant
  */
 interface ServerRequest : Request {
     val path: String
-    val parts: List<String>
     val source: Source
 
     /** Body arguments (POST/PUT/PATCH-style requests). */
@@ -48,40 +46,10 @@ interface ServerRequest : Request {
     val format: ContentType
     val files: Files
 
-    /** The full path of the route. */
-    val fullName: String
-        get() {
-            return if (name.isEmpty()) {
-                area
-            } else if (action.isEmpty()) {
-                "$area.$name"
-            } else {
-                "$area.$name.$action"
-            }
-        }
-
-    /** The top-most, first part of the route, e.g. given `/app/users/activate`, `app`. */
-    val area: String
-        get() = parts.getOrElse(0) { "" }
-
-    /** The second part of the route, e.g. given `/app/users/activate`, `users`. */
-    val name: String
-        get() = parts.getOrElse(1) { "" }
-
-    /** The third part of the route, e.g. given `/app/users/activate`, `activate`. */
-    val action: String
-        get() = parts.getOrElse(2) { "" }
-
-    fun isAction(targetArea: String, targetName: String, targetAction: String): Boolean {
-        return area == targetArea && name == targetName && action == targetAction
-    }
-
     /** Destructured into key/value pairs for structured logging. */
     fun structured(): List<Pair<String, Any?>> {
         return listOf(
-            ServerRequest::area.name to area,
-            ServerRequest::name.name to name,
-            ServerRequest::action.name to action,
+            ServerRequest::path.name to path,
             ServerRequest::source.name to source.id,
             ServerRequest::verb.name to verb.name,
             "tags" to tags.map { it.raw },
@@ -98,7 +66,6 @@ interface ServerRequest : Request {
      */
     fun clone(
         path: String = this.path,
-        parts: List<String> = this.parts,
         source: Source = this.source,
         verb: Verb = this.verb,
         data: Inputs = this.data,
