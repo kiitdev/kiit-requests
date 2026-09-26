@@ -3,10 +3,6 @@
 package kiit.requests
 
 import kiit.call.Identity
-import kiit.call.Source
-import kiit.call.Trace
-import kiit.call.Verb
-import kiit.call.Version
 import kiit.inputs.Inputs
 import kiit.inputs.ListMap
 import kiit.inputs.Meta
@@ -21,7 +17,7 @@ import kotlin.uuid.Uuid
  * A [Meta], delegating the read side to a [RecordMap] and adding [toMap]/[getAll] on top.
  * Backed by a plain, single-value-per-key `Map`, so [getAll] only ever returns zero or one
  * value; a caller that needs true multi-value meta (repeated headers) should build a
- * `kiit.inputs.MetaMap` directly instead of going through [CommonRequest]'s factories.
+ * `kiit.inputs.MetaMap` directly instead of going through [CommonServerRequest]'s factories.
  */
 private class RequestMeta(private val fields: Map<String, Any?>) :
     Meta, Inputs by RecordMap(ListMap(fields.toList())) {
@@ -31,9 +27,9 @@ private class RequestMeta(private val fields: Map<String, Any?>) :
 }
 
 /**
- * Default implementation of [Request].
+ * Default implementation of [ServerRequest].
  */
-data class CommonRequest(
+data class CommonServerRequest(
     override val path: String,
     override val parts: List<String>,
     override val source: Source,
@@ -51,7 +47,7 @@ data class CommonRequest(
     override val files: Files = Files.None,
     override val trace: Trace? = null,
     override val timestamp: Instant = Clock.System.now(),
-) : Request {
+) : ServerRequest {
     override fun clone(
         path: String,
         parts: List<String>,
@@ -70,7 +66,7 @@ data class CommonRequest(
         files: Files,
         trace: Trace?,
         timestamp: Instant,
-    ): Request {
+    ): ServerRequest {
         return this.copy(
             path = path,
             parts = parts,
@@ -112,9 +108,9 @@ data class CommonRequest(
             meta: Map<String, Any> = mapOf(),
             data: Map<String, Any> = mapOf(),
             raw: Any? = null,
-        ): Request {
+        ): ServerRequest {
             val path = if (area.isEmpty()) "$name.$action" else "$area.$name.$action"
-            return CommonRequest(
+            return CommonServerRequest(
                 path = path,
                 parts = listOf(area, name, action),
                 source = Source.API,
@@ -140,9 +136,9 @@ data class CommonRequest(
             data: Map<String, Any> = mapOf(),
             raw: Any? = null,
             version: Version = Version(api = "0"),
-        ): Request {
+        ): ServerRequest {
             val path = if (area.isEmpty()) "$name.$action" else "$area.$name.$action"
-            return CommonRequest(
+            return CommonServerRequest(
                 path = path,
                 parts = listOf(area, name, action),
                 source = Source.CLI,
@@ -167,7 +163,7 @@ data class CommonRequest(
             data: Map<String, Any> = mapOf(),
             raw: Any? = null,
             version: Version = Version(api = "0"),
-        ): Request {
+        ): ServerRequest {
             val parts = path.split(".")
             return cli(
                 area = parts.getOrElse(0) { "" },

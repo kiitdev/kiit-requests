@@ -2,7 +2,7 @@
 
 # kiit-requests
 
-**Protocol-neutral Request/Response modeling for HTTP, CLI, and queue/job calls. Kotlin Multiplatform.**
+**Protocol-neutral call modeling: a shared `Request` shape, an inbound `ServerRequest`/`CommonServerRequest`, an outbound `ClientRequest`, and `Response`. Kotlin Multiplatform.**
 
 [![Build](https://img.shields.io/github/actions/workflow/status/kiitdev/kiit-requests/ci.yml?branch=main)](https://github.com/kiitdev/kiit-requests/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/kiitdev/kiit-requests)](./LICENSE)
@@ -23,15 +23,17 @@ Part of [Kiit](https://www.kiit.dev)
 
 ## Why
 
-An HTTP request, a CLI invocation, and a queue message all carry the same underlying shape: a route, a verb, some input data, and a bit of metadata about the caller. Most code ends up modeling each one separately, so a handler written for HTTP can't be reused for CLI without a rewrite, and testing means standing up a real HTTP server just to exercise routing logic. kiit-requests is that one shape, so business logic can be written once against `Request` and wired up to whichever transport actually calls it.
+An HTTP request, a CLI invocation, and a queue message all carry the same underlying shape: a route, a verb, some input data, and a bit of metadata about the caller. Most code ends up modeling each one separately, so a handler written for HTTP can't be reused for CLI without a rewrite, and testing means standing up a real HTTP server just to exercise routing logic. kiit-requests is that one shape, so business logic can be written once against `ServerRequest` and wired up to whichever transport actually calls it.
+
+`Request` is the smaller piece underneath: the fields genuinely common to *any* call, inbound or outbound (`source`, `verb`, `version`, `meta`, `args`, `trace`, `requestId`, `timestamp`). `ServerRequest` extends it with routing (`area`/`name`/`action`, `params`, `callerId`, `files`), and a `ClientRequest` extends it for the outbound side (an outbound RPC client, e.g. kiit-rpc, implements it with its own `url`/`auth`/`body`). One vocabulary either direction, no re-translation at the boundary.
 
 ```kotlin
 import kiit.call.Identity
-import kiit.call.Verb
-import kiit.requests.CommonRequest
+import kiit.requests.CommonServerRequest
+import kiit.requests.Verb
 
 val caller = Identity.api(company = "acme", area = "web", service = "gateway")
-val request = CommonRequest.api(
+val request = CommonServerRequest.api(
     area = "app",
     name = "users",
     action = "create",
@@ -56,18 +58,18 @@ dependencies {
 }
 ```
 
-`kiit-requests` depends on `dev.kiit:kiit-inputs` and `dev.kiit:kiit-call` transitively, you
-don't need to add either separately.
+`kiit-requests` depends on `dev.kiit:kiit-inputs` (for `Inputs`/`Meta`) and `dev.kiit:kiit-call`
+(for `Identity`/`About`/`Agent`) transitively, you don't need to add either separately.
 
 **Build a request and read typed values from it:**
 
 ```kotlin
 import kiit.call.Identity
-import kiit.call.Verb
-import kiit.requests.CommonRequest
+import kiit.requests.CommonServerRequest
+import kiit.requests.Verb
 
 val caller = Identity.job(company = "acme", area = "jobs", service = "scheduler")
-val request = CommonRequest.cli(
+val request = CommonServerRequest.cli(
     area = "app",
     name = "jobs",
     action = "run",
@@ -79,7 +81,7 @@ val request = CommonRequest.cli(
 val retries = request.data.getInt("retries")
 ```
 
-`data`/`args`/`params`/`meta` are backed by kiit-inputs' `RecordMap`, which reads with a plain cast rather than parsing strings. The map passed in needs to already hold the right type per key (`3`, not `"3"`), the same way a JSON body's values are already typed once deserialized. A host parsing raw strings (CLI flags, query params) does that parsing itself before constructing the `Request`.
+`data`/`args`/`params`/`meta` are backed by kiit-inputs' `RecordMap`, which reads with a plain cast rather than parsing strings. The map passed in needs to already hold the right type per key (`3`, not `"3"`), the same way a JSON body's values are already typed once deserialized. A host parsing raw strings (CLI flags, query params) does that parsing itself before constructing the `ServerRequest`.
 
 **Rewrite a request without mutating it**, the pattern a policy or middleware layer needs:
 
@@ -89,23 +91,35 @@ val retried = request.clone(tag = request.tag + "retry")
 
 `clone()` defaults every parameter to the current value, so a caller only names what it's actually changing.
 
+**Turn a handler's `Outcome<T>` into a `Response<T>`**, ready for a responder to serialize:
+
+```kotlin
+import kiit.requests.toResponse
+
+val response = someHandler(request).toResponse()
+println("${response.success} ${response.status.name} ${response.value}")
+```
+
 See [`samples/sample-kotlin`](./samples/sample-kotlin) for a runnable end-to-end example.
 
 ## Concepts
 
 | Term | What it is |
 |---|---|
-| **`Request`** | The protocol-neutral interface: `path`/`parts`, `source`, `verb`, `data`/`args`/`params` (all `Inputs`), `meta`, `files`, `trace`, and more. |
-| **`CommonRequest`** | The default `Request` implementation, with `api`/`cli`/`path` factory functions. |
-| **`Source`** (from kiit-call) | The protocol a request arrived on: `API`, `CLI`, `Web`, `Queue`, `Bot`, and others, or `Other(name)` for anything not built in. |
-| **`Identity` / `callerId`** (from kiit-call) | `callerId: Identity` identifies the calling service/component, mobile, web, CLI, service-to-service. Strictly required, a `Request` can't be constructed without one. |
-| **`Verb`** (from kiit-call) | A protocol-neutral CRUD-ish verb (`Create`, `Get`, `Query`, `Update`, `Patch`, `Delete`, `Execute`), deliberately not HTTP-shaped. |
-| **`data` / `args` / `params`** | Three separate `Inputs` (from kiit-inputs): body arguments, query-string arguments, and path-declared parameters. `Request` keeps them apart rather than merging them into one flat map; that merge is a dispatcher concern. |
+| **`Request`** | The purely common shape of a call, either direction: `source`, `verb`, `version`, `meta`, `args`, `trace`, `requestId`, `timestamp`. |
+| **`ServerRequest`** | The inbound side: `Request` plus `path`/`parts` (`area`/`name`/`action`), `data`/`params`, `callerId`, `files`, `raw`, `output`, `tag`. |
+| **`CommonServerRequest`** | The default `ServerRequest` implementation, with `api`/`cli`/`path` factory functions. |
+| **`ClientRequest`** | The outbound side: `Request` plus a flat `url`. Deliberately thin, an RPC client (e.g. kiit-rpc's `RpcRequest`) implements it and adds its own body/auth/options. |
+| **`Source`** | The protocol/channel a call arrived on, or targets for an outbound call: `API`, `CLI`, `Web`, `Queue`, `Bot`, and others, or `Other(name)` for anything not built in. |
+| **`Identity` / `callerId`** (from kiit-call) | `callerId: Identity` identifies the calling service/component, mobile, web, CLI, service-to-service. Strictly required, a `ServerRequest` can't be constructed without one. |
+| **`Verb`** | A protocol-neutral CRUD-ish verb (`Create`, `Get`, `Query`, `Update`, `Patch`, `Delete`, `Execute`), deliberately not HTTP-shaped. |
+| **`data` / `args` / `params`** | Three separate `Inputs` (from kiit-inputs): body arguments, query-string arguments, and path-declared parameters. `ServerRequest` keeps them apart rather than merging them into one flat map; that merge is a dispatcher concern. |
 | **`meta`** | Header-like settings for the request (HTTP headers, CLI flags, queue attributes), as a `Meta`. Keys that legitimately repeat (e.g. `Set-Cookie`) are readable via `getAll(key)`. |
-| **`Version`** (from kiit-call) | A request's API-level version, plus an optional action-level override. |
-| **`Trace`** (from kiit-call) | Distributed tracing context (W3C Trace Context shape), carried through faithfully but never created or managed by kiit-requests itself. |
+| **`Version`** | A call's API-level version, plus an optional action-level override. |
+| **`Trace`** | Distributed tracing context (W3C Trace Context shape), carried through faithfully but never created or managed by kiit-requests itself. |
 | **`Files`** | Lazy access to files attached to a request, e.g. a multipart upload. `Files.None` covers hosts with no file concept. |
-| **`Content` / `ContentFile`** (from kiit-call) | Typed byte content with a `ContentType` attached, for responses or file-like values that need to carry their format along with them. |
+| **`Content` / `ContentType`** (`ContentText`/`ContentData`/`ContentFile`) | Typed byte content with a `ContentType` attached, for responses or file-like values that need to carry their format along with them. |
+| **`Response<T>`** | The complement to `ServerRequest`: a handler's `Outcome<T>` flattened into `status`/`value`/`err`/`meta`/`tag`/`desc`, ready for a responder to serialize. `CommonResponse<T>` is the default implementation; `Outcome<T>.toResponse()` builds one. |
 
 `clone()` rewrites a request without mutating it: every field defaults to `this.<field>`, matching Kotlin's own `copy()` idiom. `structured()` destructures a request into key/value pairs for structured logging, the same fields every host produces regardless of which protocol it's adapting.
 
@@ -115,16 +129,17 @@ See [`samples/sample-kotlin`](./samples/sample-kotlin) for a runnable end-to-end
 1. You want to write handler/business logic once and reuse it across HTTP, CLI, and queue/job entry points, instead of one implementation per transport.
 2. You're building a protocol adapter (an HTTP framework binding, a CLI parser, a queue consumer) and want a stable shape to construct and hand off.
 3. You need to transform a request in flight, a policy layer stripping a header, a retry wrapper adding a tag, without mutating the original.
+4. You're building an outbound client and want to share `Verb`/`Version`/`Trace`/`Source`/`Content` with the inbound side, via the common `Request` base.
 
 **Probably not necessary if:**
 1. You only ever have one transport and don't expect a second one, a framework's own request type is simpler in that case.
-2. You need response modeling with status codes built in. That's not part of this module yet.
+2. You don't need a status taxonomy on responses, a plain return value/exception is enough.
 
 ## Requirements
 
 - Kotlin Multiplatform
 - JVM, Android, iOS (arm64, simulator arm64, x64)
-- Depends on `dev.kiit:kiit-inputs` and `dev.kiit:kiit-call` (both transitively available to consumers via `api`)
+- Depends on `dev.kiit:kiit-inputs`, `dev.kiit:kiit-call`, `dev.kiit:kiit-codes`, and `dev.kiit:kiit-result` (all transitively available to consumers via `api`)
 
 ## License
 

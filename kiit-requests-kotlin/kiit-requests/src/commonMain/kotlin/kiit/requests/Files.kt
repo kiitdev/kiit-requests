@@ -1,11 +1,9 @@
 package kiit.requests
 
-import kiit.call.ContentFile
-
 /**
- * Access to files attached to a request, e.g. multipart uploads on the server side or
- * attachments staged for an outbound call on the client side. Always present and non-null on a
- * [Request]; hosts with no file concept (CLI, queue) supply [None].
+ * Access to files attached to a request, e.g. multipart uploads on the server side. Always
+ * present and non-null on a [ServerRequest]; hosts with no file concept (CLI, queue) supply
+ * [None].
  *
  * Read-only and lazy by design. Nothing is read until [get] is called. That matters
  * specifically on the server side, where multipart parsing is often sequential and one-shot,

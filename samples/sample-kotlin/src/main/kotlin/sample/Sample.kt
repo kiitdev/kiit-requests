@@ -1,8 +1,8 @@
 package sample
 
 import kiit.call.Identity
-import kiit.call.Verb
-import kiit.requests.CommonRequest
+import kiit.requests.Verb
+import kiit.requests.CommonServerRequest
 
 // The caller identity every request in this sample is attributed to. A real host would build
 // this once at startup (Identity.api/cli/job/...) and reuse it across every request/job it
@@ -14,7 +14,7 @@ private val caller = Identity.api(company = "acme", area = "web", service = "gat
  * and body data.
  */
 fun apiRequestExample() {
-    val request = CommonRequest.api(
+    val request = CommonServerRequest.api(
         area = "app",
         name = "users",
         action = "create",
@@ -36,7 +36,7 @@ fun apiRequestExample() {
  * middleware that need to transform a request without mutating it or rebuilding it from scratch.
  */
 fun cloneExample() {
-    val original = CommonRequest.cli("app", "jobs", "run", Verb.Execute, caller)
+    val original = CommonServerRequest.cli("app", "jobs", "run", Verb.Execute, caller)
     val retried = original.clone(tag = original.tag + "retry")
 
     println("original tag=${original.tag}, retried tag=${retried.tag}")
@@ -45,7 +45,7 @@ fun cloneExample() {
 
 /** `structured()` gives every host consistent structured-logging fields for free. */
 fun structuredLoggingExample() {
-    val request = CommonRequest.path("app.orders.cancel", Verb.Delete, caller)
+    val request = CommonServerRequest.path("app.orders.cancel", Verb.Delete, caller)
     request.structured().forEach { (key, value) -> println("$key=$value") }
 }
 
