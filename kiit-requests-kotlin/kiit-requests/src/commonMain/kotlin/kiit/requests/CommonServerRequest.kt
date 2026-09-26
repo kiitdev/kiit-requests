@@ -2,9 +2,10 @@
 
 package kiit.requests
 
+import kiit.call.Identity
 import kiit.inputs.Inputs
 import kiit.inputs.ListMap
-import kiit.inputs.Metadata
+import kiit.inputs.Meta
 import kiit.inputs.RecordMap
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -13,19 +14,22 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * A [Metadata], delegating the read side to a [RecordMap] and adding [toMap] on top. kiit-inputs
- * ships no general-purpose concrete `Metadata`, since a `Record`/`RecordMap` covers what most
- * consumers need directly. This is the small remainder needed for [Request.meta] specifically.
+ * A [Meta], delegating the read side to a [RecordMap] and adding [toMap]/[getAll] on top.
+ * Backed by a plain, single-value-per-key `Map`, so [getAll] only ever returns zero or one
+ * value; a caller that needs true multi-value meta (repeated headers) should build a
+ * `kiit.inputs.MetaMap` directly instead of going through [CommonServerRequest]'s factories.
  */
 private class RequestMeta(private val fields: Map<String, Any?>) :
-    Metadata, Inputs by RecordMap(ListMap(fields.toList())) {
-    override fun toMap(): Map<String, Any> = fields.filterValues { it != null }.mapValues { it.value as Any }
+    Meta, Inputs by RecordMap(ListMap(fields.toList())) {
+    override fun toMap(): Map<String, String> = fields.filterValues { it != null }.mapValues { it.value.toString() }
+
+    override fun getAll(key: String): List<String> = fields[key]?.let { listOf(it.toString()) } ?: emptyList()
 }
 
 /**
- * Default implementation of [Request].
+ * Default implementation of [ServerRequest].
  */
-data class CommonRequest(
+data class CommonServerRequest(
     override val path: String,
     override val parts: List<String>,
     override val source: Source,
@@ -33,7 +37,8 @@ data class CommonRequest(
     override val data: Inputs,
     override val args: Inputs,
     override val params: Inputs,
-    override val meta: Metadata,
+    override val meta: Meta,
+    override val callerId: Identity,
     override val raw: Any? = null,
     override val output: String? = null,
     override val tag: List<String> = listOf(),
@@ -42,7 +47,7 @@ data class CommonRequest(
     override val files: Files = Files.None,
     override val trace: Trace? = null,
     override val timestamp: Instant = Clock.System.now(),
-) : Request {
+) : ServerRequest {
     override fun clone(
         path: String,
         parts: List<String>,
@@ -51,16 +56,17 @@ data class CommonRequest(
         data: Inputs,
         args: Inputs,
         params: Inputs,
-        meta: Metadata,
+        meta: Meta,
         raw: Any?,
         output: String?,
         tag: List<String>,
         version: Version,
         requestId: String,
+        callerId: Identity,
         files: Files,
         trace: Trace?,
         timestamp: Instant,
-    ): Request {
+    ): ServerRequest {
         return this.copy(
             path = path,
             parts = parts,
@@ -75,6 +81,7 @@ data class CommonRequest(
             tag = tag,
             version = version,
             requestId = requestId,
+            callerId = callerId,
             files = files,
             trace = trace,
             timestamp = timestamp,
@@ -84,7 +91,7 @@ data class CommonRequest(
     companion object {
         private fun inputs(map: Map<String, Any>): Inputs = RecordMap(ListMap(map.toList()))
 
-        private fun metadata(map: Map<String, Any>): Metadata = RequestMeta(map)
+        private fun metadata(map: Map<String, Any>): Meta = RequestMeta(map)
 
         /**
          * Builds an API/HTTP-style request. `data` is the body/payload map; `meta` is
@@ -97,12 +104,13 @@ data class CommonRequest(
             name: String,
             action: String,
             verb: Verb,
+            callerId: Identity,
             meta: Map<String, Any> = mapOf(),
             data: Map<String, Any> = mapOf(),
             raw: Any? = null,
-        ): Request {
+        ): ServerRequest {
             val path = if (area.isEmpty()) "$name.$action" else "$area.$name.$action"
-            return CommonRequest(
+            return CommonServerRequest(
                 path = path,
                 parts = listOf(area, name, action),
                 source = Source.API,
@@ -111,6 +119,7 @@ data class CommonRequest(
                 args = inputs(mapOf()),
                 params = inputs(mapOf()),
                 meta = metadata(meta),
+                callerId = callerId,
                 raw = raw,
             )
         }
@@ -122,13 +131,14 @@ data class CommonRequest(
             name: String,
             action: String,
             verb: Verb,
+            callerId: Identity,
             meta: Map<String, Any> = mapOf(),
             data: Map<String, Any> = mapOf(),
             raw: Any? = null,
             version: Version = Version(api = "0"),
-        ): Request {
+        ): ServerRequest {
             val path = if (area.isEmpty()) "$name.$action" else "$area.$name.$action"
-            return CommonRequest(
+            return CommonServerRequest(
                 path = path,
                 parts = listOf(area, name, action),
                 source = Source.CLI,
@@ -137,6 +147,7 @@ data class CommonRequest(
                 args = inputs(mapOf()),
                 params = inputs(mapOf()),
                 meta = metadata(meta),
+                callerId = callerId,
                 raw = raw,
                 version = version,
             )
@@ -147,17 +158,19 @@ data class CommonRequest(
         fun path(
             path: String,
             verb: Verb,
+            callerId: Identity,
             meta: Map<String, Any> = mapOf(),
             data: Map<String, Any> = mapOf(),
             raw: Any? = null,
             version: Version = Version(api = "0"),
-        ): Request {
+        ): ServerRequest {
             val parts = path.split(".")
             return cli(
                 area = parts.getOrElse(0) { "" },
                 name = parts.getOrElse(1) { "" },
                 action = parts.getOrElse(2) { "" },
                 verb = verb,
+                callerId = callerId,
                 meta = meta,
                 data = data,
                 raw = raw,

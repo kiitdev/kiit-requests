@@ -36,7 +36,7 @@ object Sources {
     const val WEB = "web"
 }
 
-/** The protocol/origin a [Request] arrived on. */
+/** The protocol/channel a call arrived on, or is targeting for an outbound call. */
 sealed class Source(val id: String) {
     object All : Source(Sources.ALL)
 

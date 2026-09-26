@@ -22,8 +22,7 @@ class SourceTest {
 
     @Test
     fun unknownNameBecomesOther() {
-        val parsed = Source.parse("webhook")
-        assertEquals(Source.Other("webhook"), parsed)
+        assertEquals(Source.Other("webhook"), Source.parse("webhook"))
     }
 
     @Test

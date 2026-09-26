@@ -3,6 +3,7 @@ package kiit.requests
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class ContentTest {
@@ -40,8 +41,44 @@ class ContentTest {
     }
 
     @Test
+    fun toTextDecodesBytesForContentDataAndContentFileWhenRawIsMissing() {
+        val data = ContentData("hello".encodeToByteArray(), null, ContentTypes.Plain)
+        val file = ContentFile("note.txt", "hello".encodeToByteArray(), null, ContentTypes.Plain)
+        assertEquals("hello", Contents.toText(data))
+        assertEquals("hello", Contents.toText(file))
+    }
+
+    @Test
     fun contentTypeParseFallsBackToJson() {
         assertEquals(ContentTypes.Csv, ContentType.parse("csv"))
         assertEquals(ContentTypes.Json, ContentType.parse("unknown-extension"))
+    }
+
+    @Test
+    fun contentTextEqualityComparesByteArrayContentsNotReferences() {
+        val a = ContentText("hi".encodeToByteArray(), "hi", ContentTypes.Plain)
+        val b = ContentText("hi".encodeToByteArray(), "hi", ContentTypes.Plain)
+        assertEquals(a, b)
+        assertEquals(a.hashCode(), b.hashCode())
+    }
+
+    @Test
+    fun contentDataEqualityComparesByteArrayContentsNotReferences() {
+        val a = ContentData("hi".encodeToByteArray(), "hi", ContentTypes.Plain)
+        val b = ContentData("hi".encodeToByteArray(), "hi", ContentTypes.Plain)
+        val c = ContentData("bye".encodeToByteArray(), "bye", ContentTypes.Plain)
+        assertEquals(a, b)
+        assertEquals(a.hashCode(), b.hashCode())
+        assertNotEquals(a, c)
+    }
+
+    @Test
+    fun contentFileEqualityComparesByteArrayContentsNotReferences() {
+        val a = ContentFile("note.txt", "hi".encodeToByteArray(), "hi", ContentTypes.Plain)
+        val b = ContentFile("note.txt", "hi".encodeToByteArray(), "hi", ContentTypes.Plain)
+        val c = ContentFile("other.txt", "hi".encodeToByteArray(), "hi", ContentTypes.Plain)
+        assertEquals(a, b)
+        assertEquals(a.hashCode(), b.hashCode())
+        assertNotEquals(a, c)
     }
 }

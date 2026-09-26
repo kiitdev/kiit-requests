@@ -22,4 +22,4 @@ complexity:
     # request.clone(meta = newMeta), matching Kotlin's own copy() idiom. That's the point of
     # the wide parameter list, not something to refactor away. The companion factories
     # (api/cli/path) are correspondingly wide too, one parameter per thing they build.
-    functionThreshold: 17
+    functionThreshold: 18

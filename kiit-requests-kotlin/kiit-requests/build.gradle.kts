@@ -41,13 +41,23 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             // api, not implementation: Request/Response expose kiit-inputs types (Inputs,
-            // Metadata) directly in their public signatures, so consumers need this on their
+            // Meta) directly in their public signatures, so consumers need this on their
             // own compile classpath too. Hardcoded coordinates, not a version-catalog entry,
             // since this is an external kiit library, not part of this repo's own catalog.
             // Resolved from the local checkout via the composite build in settings.gradle.kts
             // until kiit-inputs is actually published, at which point this becomes a normal
             // Maven Central dependency with no other change needed.
             api("dev.kiit:kiit-inputs:0.0.0")
+
+            // Source/Identity/About/Verb/Version/Trace/Content moved here from being defined
+            // locally, Request exposes all of these directly. Same local-checkout situation as
+            // kiit-inputs above.
+            api("dev.kiit:kiit-call:0.0.0")
+
+            // Response exposes Status/Err directly. Both are already published to Maven Central,
+            // same versions kiit-rpc depends on - no composite build needed for these two.
+            api("dev.kiit:kiit-codes:1.1.0")
+            api("dev.kiit:kiit-result:1.0.2")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
