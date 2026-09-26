@@ -1,6 +1,6 @@
 package kiit.requests
 
-import kiit.call.Identity
+import kiit.identity.Identity
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

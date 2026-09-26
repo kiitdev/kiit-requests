@@ -1,6 +1,6 @@
 package kiit.requests
 
-import kiit.call.Identity
+import kiit.identity.Identity
 import kiit.inputs.Args
 import kiit.inputs.Meta
 import kotlinx.datetime.Instant

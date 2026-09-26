@@ -8,7 +8,7 @@ All notable changes to kiit-requests are documented here. Format follows
 
 ### Added
 - Extracted from the Kiit monorepo as its own standalone module.
-- `Verb`/`Version`/`Trace`/`Source`/`Content`/`ContentType` moved in from `kiit-call`, so
+- `Verb`/`Version`/`Trace`/`Source`/`Content`/`ContentType` moved in from `kiit-identity`, so
   kiit-requests now owns the whole call-shape domain, both directions.
 - New base `Request` interface: the fields purely common to any call, inbound or outbound
   (`verb`/`version`/`meta`/`args`/`trace`/`requestId`/`timestamp`/`callerId`/`tags`). `callerId`

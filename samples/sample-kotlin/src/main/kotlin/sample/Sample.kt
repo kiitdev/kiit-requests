@@ -1,6 +1,6 @@
 package sample
 
-import kiit.call.Identity
+import kiit.identity.Identity
 import kiit.requests.KiitRequest
 import kiit.requests.Tag
 import kiit.requests.Verb
