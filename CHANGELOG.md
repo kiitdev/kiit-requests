@@ -42,3 +42,10 @@ All notable changes to kiit-requests are documented here. Format follows
   they're structurally identical, so the two aren't interchangeable by accident. `KiitRequest`'s
   factories take `meta: Map<String, String>` now (was `Map<String, Any>`), matching `Meta`'s own
   always-a-string convention, rather than a bespoke pre-typed `Meta` implementation.
+- `Response<T>.tag: List<String>` renamed to `tags: List<Tag>`, matching `Request`'s own move to
+  `Tag`.
+
+### Removed
+- `Response<T>.desc: String?` — dead weight, never actually set by `Outcome<T>.toResponse()` (the
+  one real construction path), and `Err.ErrorInfo.message` already covers per-instance failure
+  detail.

@@ -47,10 +47,11 @@ class ResponseTest {
     }
 
     @Test
-    fun descIsIndependentOfStatusMessage() {
-        val response = CommonResponse<Unit>(status = Unserved.RATE_LIMITED, desc = "retry after 30s")
+    fun tagsDefaultToEmptyAndCanBeSetDirectly() {
+        val response = CommonResponse<Unit>(status = Succeeded.SUCCESS)
+        assertEquals(emptyList(), response.tags)
 
-        assertEquals("retry after 30s", response.desc)
-        assertEquals("Too many requests; try again later.", response.status.message)
+        val tagged = CommonResponse<Unit>(status = Succeeded.SUCCESS, tags = listOf(Tag.Basic("retry")))
+        assertEquals(listOf(Tag.Basic("retry")), tagged.tags)
     }
 }

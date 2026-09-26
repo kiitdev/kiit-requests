@@ -13,16 +13,14 @@ import kiit.inputs.MetaMap
  * [kiit.result.Outcome] via [toResponse].
  *
  * [status] carries the full taxonomy (name/group/origin/message); this type doesn't duplicate
- * any of that onto separate fields. [desc] is per-instance, runtime-constructed detail, distinct
- * from [Status.message] (which is a constant, never built from runtime data).
+ * any of that onto separate fields.
  */
 interface Response<out T> {
     val status: Status
     val value: T?
     val err: Err?
     val meta: Meta
-    val tag: List<String>
-    val desc: String?
+    val tags: List<Tag>
 
     val success: Boolean get() = status.success
 
@@ -37,8 +35,7 @@ data class CommonResponse<out T>(
     override val value: T? = null,
     override val err: Err? = null,
     override val meta: Meta = MetaMap(ListMap()),
-    override val tag: List<String> = listOf(),
-    override val desc: String? = null,
+    override val tags: List<Tag> = listOf(),
 ) : Response<T> {
     override fun withMeta(meta: Meta): Response<T> = copy(meta = meta)
 }

@@ -127,7 +127,7 @@ See [`samples/sample-kotlin`](./samples/sample-kotlin) for a runnable end-to-end
 | **`Files`** (`ServerRequest` only) | Lazy access to files attached to a request, e.g. a multipart upload. `Files.None` covers hosts with no file concept. |
 | **`format`** (`ServerRequest` only) | Desired response format, a `ContentType`, defaulting to `ContentTypes.Json`. |
 | **`Content` / `ContentType`** (`ContentText`/`ContentData`/`ContentFile`) | Typed byte content with a `ContentType` attached, for responses or file-like values that need to carry their format along with them. |
-| **`Response<T>`** | The complement to `ServerRequest`: a handler's `Outcome<T>` flattened into `status`/`value`/`err`/`meta`/`tag`/`desc`, ready for a responder to serialize. `CommonResponse<T>` is the default implementation; `Outcome<T>.toResponse()` builds one. |
+| **`Response<T>`** | The complement to `ServerRequest`: a handler's `Outcome<T>` flattened into `status`/`value`/`err`/`meta`/`tags`, ready for a responder to serialize. `CommonResponse<T>` is the default implementation; `Outcome<T>.toResponse()` builds one. |
 
 `clone()` rewrites a request without mutating it: every field defaults to `this.<field>`, matching Kotlin's own `copy()` idiom. `structured()` destructures a request into key/value pairs for structured logging, the same fields every host produces regardless of which protocol it's adapting.
 
