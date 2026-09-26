@@ -30,7 +30,7 @@ An HTTP request, a CLI invocation, and a queue message all carry the same underl
 `ServerRequest` itself carries no routing opinion, `path` is just whatever raw route string a call targeted. Kiit's own `area`/`api`/`action` three-part convention is opt-in, via `KiitRouting`, and `KiitRequest` is the real, ready-to-use type that combines the two, the one kiit-cli/kiit-tasks/kiit-apis actually dispatch on:
 
 ```kotlin
-import kiit.call.Identity
+import kiit.identity.Identity
 import kiit.requests.KiitRequest
 import kiit.requests.Verb
 
@@ -60,13 +60,13 @@ dependencies {
 }
 ```
 
-`kiit-requests` depends on `dev.kiit:kiit-inputs` (for `Inputs`/`Meta`) and `dev.kiit:kiit-call`
-(for `Identity`/`About`/`Agent`) transitively, you don't need to add either separately.
+`kiit-requests` depends on `dev.kiit:kiit-inputs` (for `Inputs`/`Meta`) and `dev.kiit:kiit-identity`
+(for `Identity`/`Agent`) transitively, you don't need to add either separately.
 
 **Build a request and read typed values from it:**
 
 ```kotlin
-import kiit.call.Identity
+import kiit.identity.Identity
 import kiit.requests.KiitRequest
 import kiit.requests.Verb
 
@@ -116,7 +116,7 @@ See [`samples/sample-kotlin`](./samples/sample-kotlin) for a runnable end-to-end
 | **`KiitRequest`** | The real, ready-to-use type combining `ServerRequest` and `KiitRouting`, with `api`/`cli`/`path` factory functions. What kiit-cli/kiit-tasks/kiit-apis actually dispatch on. |
 | **`ClientRequest`** | The outbound side: `Request` plus a flat `url`. Deliberately thin, an RPC client (e.g. kiit-rpc's `RpcRequest`) implements it and adds its own body/auth/options. |
 | **`Source`** (`ServerRequest` only) | What triggered kiit-apis to dispatch a request: `Api`, `Queue`, `Job`, `Cli`. `Parent`/`All` are route-declaration values (inherit from a parent action, or accept any source), not dispatch triggers. A closed set. |
-| **`Identity` / `callerId`** (from kiit-call) | `callerId: Identity` identifies the calling service/component. Required on `Request` itself, both directions, so a policy/middleware wrapping any call sees it directly, and any `ClientRequest` implementation is bound by it too, not just kiit-rpc's own convention. |
+| **`Identity` / `callerId`** (from kiit-identity) | `callerId: Identity` identifies the calling service/component. Required on `Request` itself, both directions, so a policy/middleware wrapping any call sees it directly, and any `ClientRequest` implementation is bound by it too, not just kiit-rpc's own convention. |
 | **`Verb`** | A protocol-neutral CRUD-ish verb (`Get`, `Query`, `Create`, `Update`, `Upsert`, `Patch`, `Delete`, `Execute`), deliberately not HTTP-shaped. |
 | **`data` / `params`** (`ServerRequest` only) | Two separate `Inputs` (from kiit-inputs): body arguments and path-declared parameters. `ServerRequest` keeps them apart rather than merging them into one flat map; that merge is a dispatcher concern. |
 | **`args`** | Query/call arguments, as an `Args` (from kiit-inputs). Same shape as `Meta` (`Inputs` + `Repeatable`), kept as its own type so the two aren't interchangeable by accident. |
@@ -147,7 +147,7 @@ See [`samples/sample-kotlin`](./samples/sample-kotlin) for a runnable end-to-end
 
 - Kotlin Multiplatform
 - JVM, Android, iOS (arm64, simulator arm64, x64)
-- Depends on `dev.kiit:kiit-inputs`, `dev.kiit:kiit-call`, `dev.kiit:kiit-codes`, and `dev.kiit:kiit-result` (all transitively available to consumers via `api`)
+- Depends on `dev.kiit:kiit-inputs`, `dev.kiit:kiit-identity`, `dev.kiit:kiit-codes`, and `dev.kiit:kiit-result` (all transitively available to consumers via `api`)
 
 ## License
 

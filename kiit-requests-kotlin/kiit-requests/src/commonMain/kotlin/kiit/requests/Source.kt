@@ -6,8 +6,8 @@ package kiit.requests
  * source as `@parent` (inherit its containing API's declared source) or `*` (accept any source).
  *
  * A closed set, deliberately: these are kiit-apis' own known dispatch/declaration values, not an
- * open, client-supplied taxonomy (that's [kiit.call.Agent]'s job, for the executable/service kind
- * behind an [kiit.call.Identity]).
+ * open, client-supplied taxonomy (that's [kiit.identity.Agent]'s job, for the executable/service kind
+ * behind an [kiit.identity.Identity]).
  */
 sealed class Source(val id: String) {
     object Parent : Source(PARENT)

@@ -21,24 +21,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "kiit-requests-kotlin"
 
-// Composite build: kiit-inputs isn't published to Maven Central yet, so build it from the local
-// checkout instead. Explicit substitution rather than relying on group/version matching, since
-// :kiit-inputs (the included subproject) doesn't set `group`/`version` as real Gradle project
-// properties (only inside its mavenPublishing { coordinates(...) } block), so default
-// group:name-based substitution wouldn't pick it up on its own. Remove this whole block once
-// kiit-inputs is actually published and this depends on the real dev.kiit:kiit-inputs artifact.
-includeBuild("../../kiit-inputs/kiit-inputs-kotlin") {
-    dependencySubstitution {
-        substitute(module("dev.kiit:kiit-inputs")).using(project(":kiit-inputs"))
-    }
-}
-
-// Same situation for kiit-call: not published yet either, built from the local checkout.
-includeBuild("../../kiit-call/kiit-call-kotlin") {
-    dependencySubstitution {
-        substitute(module("dev.kiit:kiit-call")).using(project(":kiit-call"))
-    }
-}
+// kiit-inputs and kiit-identity are both published to Maven Central (see build.gradle.kts), no
+// composite build needed for either anymore.
 
 include(":kiit-requests")
 include(":sample-kotlin")

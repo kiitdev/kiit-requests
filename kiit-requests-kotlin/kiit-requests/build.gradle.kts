@@ -13,7 +13,7 @@ plugins {
 // Single source of truth for the published version, mirroring every other kiit module. Left as
 // a placeholder: the starting version and first publish target (GitHub Packages pre-release vs.
 // Maven Central stable) are the module owner's call, not something to lock in during scaffolding.
-val libraryVersion = "0.0.0"
+val libraryVersion = "0.8.0"
 
 kotlin {
     jvm {
@@ -44,15 +44,12 @@ kotlin {
             // Meta) directly in their public signatures, so consumers need this on their
             // own compile classpath too. Hardcoded coordinates, not a version-catalog entry,
             // since this is an external kiit library, not part of this repo's own catalog.
-            // Resolved from the local checkout via the composite build in settings.gradle.kts
-            // until kiit-inputs is actually published, at which point this becomes a normal
-            // Maven Central dependency with no other change needed.
-            api("dev.kiit:kiit-inputs:0.0.0")
+            // Published to Maven Central, no composite build needed.
+            api("dev.kiit:kiit-inputs:0.8.0")
 
-            // Source/Identity/About/Verb/Version/Trace/Content moved here from being defined
-            // locally, Request exposes all of these directly. Same local-checkout situation as
-            // kiit-inputs above.
-            api("dev.kiit:kiit-call:0.0.0")
+            // Only Identity is used directly (callerId). Published to Maven Central, no
+            // composite build needed.
+            api("dev.kiit:kiit-identity:0.8.0")
 
             // Response exposes Status/Err directly. Both are already published to Maven Central,
             // same versions kiit-rpc depends on - no composite build needed for these two.
