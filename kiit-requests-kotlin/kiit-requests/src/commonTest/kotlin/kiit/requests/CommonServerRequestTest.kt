@@ -20,7 +20,7 @@ class CommonServerRequestTest {
                 data = mapOf("email" to "alice@example.com"),
             )
 
-        assertEquals(Source.API, request.source)
+        assertEquals(Source.Api, request.source)
         assertEquals(Verb.Create, request.verb)
         assertEquals(caller, request.callerId)
         assertEquals("alice@example.com", request.data.getString("email"))
@@ -37,7 +37,7 @@ class CommonServerRequestTest {
     @Test
     fun cliFactoryUsesCliSourceAndDefaultVersion() {
         val request = CommonServerRequest.cli("app", "users", "create", Verb.Create, caller)
-        assertEquals(Source.CLI, request.source)
+        assertEquals(Source.Cli, request.source)
         assertEquals(Version(api = "0"), request.version)
     }
 
@@ -45,7 +45,7 @@ class CommonServerRequestTest {
     fun pathFactorySplitsDotDelimitedPath() {
         val request = CommonServerRequest.path("app.users.create", Verb.Create, caller)
         assertEquals(listOf("app", "users", "create"), request.parts)
-        assertEquals(Source.CLI, request.source)
+        assertEquals(Source.Cli, request.source)
     }
 
     @Test

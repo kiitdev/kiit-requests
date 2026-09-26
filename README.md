@@ -110,9 +110,9 @@ See [`samples/sample-kotlin`](./samples/sample-kotlin) for a runnable end-to-end
 | **`ServerRequest`** | The inbound side: `Request` plus `path`/`parts` (`area`/`name`/`action`), `data`/`params`, `callerId`, `files`, `raw`, `output`, `tag`. |
 | **`CommonServerRequest`** | The default `ServerRequest` implementation, with `api`/`cli`/`path` factory functions. |
 | **`ClientRequest`** | The outbound side: `Request` plus a flat `url`. Deliberately thin, an RPC client (e.g. kiit-rpc's `RpcRequest`) implements it and adds its own body/auth/options. |
-| **`Source`** | The protocol/channel a call arrived on, or targets for an outbound call: `API`, `CLI`, `Web`, `Queue`, `Bot`, and others, or `Other(name)` for anything not built in. |
+| **`Source`** | What triggered kiit-apis to dispatch a request: `Api`, `Queue`, `Job`, `Cli`. `Parent`/`All` are route-declaration values (inherit from a parent action, or accept any source), not dispatch triggers. A closed set. |
 | **`Identity` / `callerId`** (from kiit-call) | `callerId: Identity` identifies the calling service/component, mobile, web, CLI, service-to-service. Strictly required, a `ServerRequest` can't be constructed without one. |
-| **`Verb`** | A protocol-neutral CRUD-ish verb (`Create`, `Get`, `Query`, `Update`, `Patch`, `Delete`, `Execute`), deliberately not HTTP-shaped. |
+| **`Verb`** | A protocol-neutral CRUD-ish verb (`Get`, `Query`, `Create`, `Update`, `Upsert`, `Patch`, `Delete`, `Execute`), deliberately not HTTP-shaped. |
 | **`data` / `args` / `params`** | Three separate `Inputs` (from kiit-inputs): body arguments, query-string arguments, and path-declared parameters. `ServerRequest` keeps them apart rather than merging them into one flat map; that merge is a dispatcher concern. |
 | **`meta`** | Header-like settings for the request (HTTP headers, CLI flags, queue attributes), as a `Meta`. Keys that legitimately repeat (e.g. `Set-Cookie`) are readable via `getAll(key)`. |
 | **`Version`** | A call's API-level version, plus an optional action-level override. |

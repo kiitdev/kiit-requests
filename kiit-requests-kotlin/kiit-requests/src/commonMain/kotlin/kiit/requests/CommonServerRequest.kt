@@ -113,7 +113,7 @@ data class CommonServerRequest(
             return CommonServerRequest(
                 path = path,
                 parts = listOf(area, name, action),
-                source = Source.API,
+                source = Source.Api,
                 verb = verb,
                 data = inputs(data),
                 args = inputs(mapOf()),
@@ -141,7 +141,7 @@ data class CommonServerRequest(
             return CommonServerRequest(
                 path = path,
                 parts = listOf(area, name, action),
-                source = Source.CLI,
+                source = Source.Cli,
                 verb = verb,
                 data = inputs(data),
                 args = inputs(mapOf()),

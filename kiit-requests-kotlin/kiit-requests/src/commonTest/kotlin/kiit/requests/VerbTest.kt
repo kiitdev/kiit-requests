@@ -7,7 +7,7 @@ class VerbTest {
     @Test
     fun coversEveryProtocolNeutralVerb() {
         assertEquals(
-            listOf("Create", "Get", "Query", "Update", "Patch", "Delete", "Execute"),
+            listOf("Get", "Query", "Create", "Update", "Upsert", "Patch", "Delete", "Execute"),
             Verb.entries.map { it.name },
         )
     }
