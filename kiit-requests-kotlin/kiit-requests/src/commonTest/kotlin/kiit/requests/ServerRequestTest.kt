@@ -73,10 +73,10 @@ class ServerRequestTest {
     @Test
     fun cloneOnlyChangesTheFieldsPassed() {
         val request = CommonServerRequest.api("app", "users", "activate", Verb.Get, caller)
-        val cloned = request.clone(verb = Verb.Update, tag = listOf("retry"))
+        val cloned = request.clone(verb = Verb.Update, tags = listOf(Tag.Basic("retry")))
 
         assertEquals(Verb.Update, cloned.verb)
-        assertEquals(listOf("retry"), cloned.tag)
+        assertEquals(listOf(Tag.Basic("retry")), cloned.tags)
         assertEquals(request.path, cloned.path)
         assertEquals(request.requestId, cloned.requestId)
     }

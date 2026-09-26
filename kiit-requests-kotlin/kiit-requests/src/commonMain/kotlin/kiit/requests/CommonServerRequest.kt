@@ -3,6 +3,8 @@
 package kiit.requests
 
 import kiit.call.Identity
+import kiit.inputs.Args
+import kiit.inputs.ArgsMap
 import kiit.inputs.Inputs
 import kiit.inputs.ListMap
 import kiit.inputs.Meta
@@ -35,13 +37,13 @@ data class CommonServerRequest(
     override val source: Source,
     override val verb: Verb,
     override val data: Inputs,
-    override val args: Inputs,
+    override val args: Args,
     override val params: Inputs,
     override val meta: Meta,
     override val callerId: Identity,
     override val raw: Any? = null,
-    override val output: String? = null,
-    override val tag: List<String> = listOf(),
+    override val format: ContentType = ContentTypes.Json,
+    override val tags: List<Tag> = listOf(),
     override val version: Version = Version(api = "0"),
     override val requestId: String = Uuid.random().toString(),
     override val files: Files = Files.None,
@@ -54,12 +56,12 @@ data class CommonServerRequest(
         source: Source,
         verb: Verb,
         data: Inputs,
-        args: Inputs,
+        args: Args,
         params: Inputs,
         meta: Meta,
         raw: Any?,
-        output: String?,
-        tag: List<String>,
+        format: ContentType,
+        tags: List<Tag>,
         version: Version,
         requestId: String,
         callerId: Identity,
@@ -77,8 +79,8 @@ data class CommonServerRequest(
             params = params,
             meta = meta,
             raw = raw,
-            output = output,
-            tag = tag,
+            format = format,
+            tags = tags,
             version = version,
             requestId = requestId,
             callerId = callerId,
@@ -116,7 +118,7 @@ data class CommonServerRequest(
                 source = Source.Api,
                 verb = verb,
                 data = inputs(data),
-                args = inputs(mapOf()),
+                args = ArgsMap(ListMap()),
                 params = inputs(mapOf()),
                 meta = metadata(meta),
                 callerId = callerId,
@@ -144,7 +146,7 @@ data class CommonServerRequest(
                 source = Source.Cli,
                 verb = verb,
                 data = inputs(data),
-                args = inputs(mapOf()),
+                args = ArgsMap(ListMap()),
                 params = inputs(mapOf()),
                 meta = metadata(meta),
                 callerId = callerId,

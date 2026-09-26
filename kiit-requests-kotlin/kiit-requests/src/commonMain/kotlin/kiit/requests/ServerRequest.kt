@@ -1,6 +1,7 @@
 package kiit.requests
 
 import kiit.call.Identity
+import kiit.inputs.Args
 import kiit.inputs.Inputs
 import kiit.inputs.Meta
 import kotlinx.datetime.Instant
@@ -23,6 +24,7 @@ import kotlinx.datetime.Instant
 interface ServerRequest : Request {
     val path: String
     val parts: List<String>
+    val source: Source
 
     /** Body arguments (POST/PUT/PATCH-style requests). */
     val data: Inputs
@@ -33,7 +35,6 @@ interface ServerRequest : Request {
      * `params = {"year": "2024", "month": "03"}`. Empty if no action could be resolved.
      */
     val params: Inputs
-    override val meta: Meta
 
     /**
      * The underlying transport object this request was built from. Shape depends on [source]:
@@ -43,19 +44,8 @@ interface ServerRequest : Request {
      */
     val raw: Any?
 
-    /** Output format of the result, e.g. json by default, csv, props. */
-    val output: String?
-
-    /** Caller-supplied correlation labels, for tracking/grouping requests, may span several. */
-    val tag: List<String>
-
-    /**
-     * Identifies the calling service/component/app. Strictly required, every caller (mobile,
-     * web, CLI, service-to-service) must supply this. A [ServerRequest] cannot be constructed
-     * without a valid [callerId], the same construction-time contract already applied to
-     * [area]/[name]/[action].
-     */
-    val callerId: Identity
+    /** Desired format of the result, e.g. JSON by default, CSV, props. */
+    val format: ContentType
     val files: Files
 
     /** The full path of the route. */
@@ -94,7 +84,7 @@ interface ServerRequest : Request {
             ServerRequest::action.name to action,
             ServerRequest::source.name to source.id,
             ServerRequest::verb.name to verb.name,
-            ServerRequest::tag.name to tag,
+            "tags" to tags.map { it.raw },
             ServerRequest::requestId.name to requestId,
             ServerRequest::callerId.name to callerId.id,
             ServerRequest::timestamp.name to timestamp.toString(),
@@ -112,12 +102,12 @@ interface ServerRequest : Request {
         source: Source = this.source,
         verb: Verb = this.verb,
         data: Inputs = this.data,
-        args: Inputs = this.args,
+        args: Args = this.args,
         params: Inputs = this.params,
         meta: Meta = this.meta,
         raw: Any? = this.raw,
-        output: String? = this.output,
-        tag: List<String> = this.tag,
+        format: ContentType = this.format,
+        tags: List<Tag> = this.tags,
         version: Version = this.version,
         requestId: String = this.requestId,
         callerId: Identity = this.callerId,

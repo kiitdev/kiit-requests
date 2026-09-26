@@ -1,8 +1,9 @@
 package sample
 
 import kiit.call.Identity
-import kiit.requests.Verb
 import kiit.requests.CommonServerRequest
+import kiit.requests.Tag
+import kiit.requests.Verb
 
 // The caller identity every request in this sample is attributed to. A real host would build
 // this once at startup (Identity.api/cli/job/...) and reuse it across every request/job it
@@ -37,9 +38,9 @@ fun apiRequestExample() {
  */
 fun cloneExample() {
     val original = CommonServerRequest.cli("app", "jobs", "run", Verb.Execute, caller)
-    val retried = original.clone(tag = original.tag + "retry")
+    val retried = original.clone(tags = original.tags + Tag.Basic("retry"))
 
-    println("original tag=${original.tag}, retried tag=${retried.tag}")
+    println("original tags=${original.tags}, retried tags=${retried.tags}")
     println("same requestId? ${original.requestId == retried.requestId}")
 }
 
